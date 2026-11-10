@@ -1,0 +1,55 @@
+# Endpoint catalogue. Exchange APIs drift; fix URLs/params here, not in code.
+# `probe` lists keys the response must contain — ingestion aborts loudly (and logs) if the shape changed.
+http:
+  min_interval_s: 2.5
+  max_tries: 5
+
+nse:
+  home: https://www.nseindia.com/
+  equity_list_csv: https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv
+  announcements:
+    url: https://www.nseindia.com/api/corporate-announcements
+    params: {index: equities}          # + from_date=DD-MM-YYYY & to_date=DD-MM-YYYY
+    probe: [symbol, desc, attchmntFile, an_dt]
+    max_window_days: 30
+  shp_list:
+    url: https://www.nseindia.com/api/corporate-share-holdings-master
+    params: {index: equities}          # + from_date/to_date
+    probe: [symbol, date, xbrl]
+  pledge:
+    url: https://www.nseindia.com/api/corporates-pledgedata
+    params: {index: equities}
+    probe: [symbol]
+  insider:
+    url: https://www.nseindia.com/api/corporates-pit
+    params: {index: equities}          # + from_date/to_date
+    probe: [symbol, acqName, tdpTransactionType, secAcq, acqMode, date]
+    max_window_days: 30
+  rpt_list:
+    url: https://www.nseindia.com/api/corporate-rpt
+    params: {index: equities}          # + from_date/to_date
+    probe: [symbol, xbrl]
+  results_list:
+    url: https://www.nseindia.com/api/corporates-financial-results
+    params: {index: equities, period: Quarterly}   # + from_date/to_date
+    probe: [symbol, toDate, filingDate]
+
+bse:
+  scrip_master: https://api.bseindia.com/BseIndiaAPI/api/ListofScripData/w
+  scrip_master_params: {Group: "", Scripcode: "", industry: "", segment: Equity, status: Active}
+  announcements:
+    url: https://api.bseindia.com/BseIndiaAPI/api/AnnSubCategoryGetData/w
+    params: {pageno: 1, strCat: -1, strPrevDate: "", strScrip: "", strSearch: P, strToDate: "", strType: C, subcategory: -1}
+    probe: [Table]
+  referer: https://www.bseindia.com/
+
+# Announcement classification (keyword rules; case-insensitive substring on subject + body excerpt)
+classify:
+  statutory_auditor_terms: ["statutory auditor", "statutory auditors", "auditor of the company", "auditors of the company"]
+  non_statutory_terms: ["secretarial auditor", "internal auditor", "cost auditor", "tax auditor", "concurrent auditor"]
+  resignation_terms: ["resignation", "resigned", "resigns", "cessation", "ceased", "ceases", "withdrawal"]
+  appointment_terms: ["appointment", "appointed", "re-appointment", "reappointment"]
+  rotation_terms: ["completion of term", "completion of their term", "completion of tenure", "expiry of term", "rotation", "section 139", "end of term", "term of office", "first term", "second term"]
+  midterm_terms: ["before the completion", "prior to the completion", "before completion", "mid-term", "midterm", "with immediate effect", "unable to continue", "pre-occupation", "preoccupation"]
+  cirp_terms: ["corporate insolvency resolution process", "cirp", "insolvency and bankruptcy code", "nclt admits", "admitted under section 7", "admitted under section 9", "interim resolution professional"]
+  results_terms: ["financial results", "unaudited financial results", "audited financial results"]

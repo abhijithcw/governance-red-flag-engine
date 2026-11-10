@@ -1,0 +1,48 @@
+# XBRL concept matching. SEBI/exchange taxonomies change element names across versions, so parsers
+# match on case-insensitive REGEX against the element's local name (namespace stripped).
+# First pattern that matches wins. Values are summed/selected per context as described in parsers.
+
+shp:
+  # Table I category contexts carry a "ShareholdingPatternAxis"/"CategoryOfShareholder" style member.
+  # We identify the category of a context by regex on its explicit-member values (dimension members).
+  category_member_patterns:
+    promoter:        ["PromoterAndPromoterGroup", "^Promoter", "ShareholdingOfPromoter"]
+    fpi:             ["ForeignPortfolioInvestor", "^FPI", "ForeignInstitutionalInvestor"]
+    mf:              ["MutualFund"]
+    insurance:       ["InsuranceCompan"]
+    bank_fi:         ["Bank", "FinancialInstitution"]
+    aif:             ["AlternateInvestmentFund", "AlternativeInvestmentFund"]
+    institutions_domestic: ["InstitutionsDomestic", "^Institutions$", "InstitutionsMember$"]
+    institutions_foreign:  ["InstitutionsForeign"]
+    public:          ["^Public$", "PublicShareholding", "NonPromoterNonPublic$"]
+    total:           ["^Total$", "TotalShareholding", "ShareholdingTotal"]
+  concept_patterns:
+    shares_held:     ["^NumberOfFullyPaidUpEquityShares", "^TotalNumberOfSharesHeld", "^NumberOfSharesHeld", "^SharesHeld"]
+    pct_total:       ["^ShareholdingAsAPercentageOfTotalNumberOfShares", "^ShareholdingAsAPercentageOfTotal", "^PercentageOfShareholding", "^ShareholdingPercentage"]
+    pledged_shares:  ["^NumberOfSharesPledgedOrOtherwiseEncumbered", "^NumberOfSharesPledged", "^SharesPledged", "^Pledged.*Number"]
+    pledged_pct:     ["^PercentageOfSharesPledgedOrOtherwiseEncumbered", "^PercentageOfSharesPledged", "^Pledged.*Percentage"]
+    holder_name:     ["^NameOfTheShareholders?$", "^NameOfShareholders?$", "^NameOfTheShareholder", "^ShareholderName", "^CategoryOfShareholder", "^NameOfThePromoter"]
+    total_shares:    ["^TotalNumberOfShares$", "^TotalNumberOfEquityShares", "^NumberOfEquitySharesOutstanding"]
+  # contexts with a typed member on one of these axes are individual named holders
+  holder_axes:      ["ShareholderAxis", "ShareholdersAxis", "NameOfShareholderAxis", "PromoterAxis", "DetailsOfShareholderAxis"]
+  table_axes:
+    II: ["PromoterAndPromoterGroup", "TableII", "Promoter"]
+    III: ["Public", "TableIII"]
+
+rpt:
+  line_axes:        ["RelatedPartyTransactionsAxis", "RelatedPartyTransactionAxis", "DetailsOfRelatedPartyTransactionsAxis", "TransactionsAxis"]
+  concept_patterns:
+    sr_no:           ["^SrNo", "^SerialNumber", "^SlNo"]
+    counterparty:    ["^NameOfTheRelatedParty", "^NameOfRelatedParty", "^RelatedPartyName", "^NameOfTheCounterparty"]
+    counterparty_pan:["^PANOfTheRelatedParty", "^PANOfRelatedParty", "RelatedPartyPAN"]
+    relationship:    ["^RelationshipOfTheRelatedParty", "^RelationshipOfRelatedParty", "^NatureOfRelationship", "^Relationship"]
+    txn_type:        ["^TypeOfRelatedPartyTransaction", "^TypeOfTransaction", "^NatureOfTransaction", "^DetailsOfTheTransaction"]
+    approved_value:  ["^ValueOfTheRelatedPartyTransactionAsApproved", "^ValueOfRelatedPartyTransactionAsApproved", "^ApprovedValue", "AsApprovedByTheAuditCommittee"]
+    value:           ["^ValueOfTransactionDuringTheReportingPeriod", "^ValueOfRelatedPartyTransactionDuringTheReportingPeriod", "^ValueOfTransaction", "^TransactionValue", "^AmountOfTransaction"]
+  wos_patterns:     ["wholly[- ]owned subsidiary", "^wos$", "wholly owned"]
+
+results:
+  concept_patterns:
+    revenue:         ["^RevenueFromOperations$", "^RevenueFromOperation", "^IncomeFromOperations", "^TotalRevenueFromOperations"]
+    period_end:      ["^DateOfEndOfReportingPeriod", "^DateOfEndOfFinancialYear", "^PeriodEndDate"]
+    consolidated:    ["^NatureOfReportStandaloneConsolidated", "^StandaloneOrConsolidated", "^ConsolidatedOrStandalone"]
