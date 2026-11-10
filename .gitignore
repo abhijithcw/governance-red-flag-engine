@@ -1,0 +1,15 @@
+data/
+*.db
+*.sqlite*
+*.pdf
+*.xml
+*.xbrl
+cache/
+logs/
+site/
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/

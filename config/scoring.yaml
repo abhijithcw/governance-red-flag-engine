@@ -1,0 +1,127 @@
+# governance-red-flag-engine — scoring config (v1)
+# All thresholds and weights live here. Code reads this file; nothing is hard-coded.
+# Score = sum(weight × severity_multiplier) over active flags, capped at 100.
+
+severity_multiplier:
+  info: 0.0        # shown on dashboard, never scores
+  low: 0.5
+  medium: 1.0
+  high: 2.0
+
+score_cap: 100
+
+# Lookback: a flag counts toward the score only while its as_of date is within this window.
+flag_lookback_days:
+  default: 365
+  AUD_RESIGN_MIDTERM: 730
+  RESULTS_DELAYED: 365
+  INSIDER_CLUSTER: 180
+
+flags:
+
+  # ---- Auditor (Reg 30 + Sch III Part A Para A item 7 / 7A; Companies Act s.139(2)) ----
+  AUD_RESIGN_MIDTERM:
+    description: Statutory auditor resigned mid-term
+    severity: high
+    weight: 25
+    applies_to: statutory            # secretarial/internal/cost auditor changes are ignored entirely
+    # Mid-term = resignation before completion of the term stated in the appointment, or
+    # before the AGM at which the term would end. Determined from announcement text + item 7A reasons.
+  AUD_CHANGE_ENDTERM:
+    description: Statutory auditor change at end of term / mandatory rotation (s.139(2))
+    severity: info
+    weight: 0
+
+  # ---- Promoter pledge (SHP Table II + SAST Reg 31; SEBI circ. SEBI/HO/CFD/DCR1/CIR/P/2019/90) ----
+  PLEDGE_QOQ_INCREASE:
+    description: Promoter pledge % of promoter holding rose QoQ
+    severity: medium
+    weight: 12
+    min_increase_pp: 5.0             # X pp (percentage points) QoQ increase in pledged/promoter_holding
+    min_pledged_pct_after: 10.0      # ignore tiny bases (e.g. 1% -> 7%) unless after-level ≥ this
+  PLEDGE_ABOVE_50PCT_HOLDING:
+    description: Encumbrance ≥ 50% of promoter holding (SEBI 2019 circular threshold)
+    severity: high
+    weight: 15
+    threshold_pct: 50.0
+  PLEDGE_ABOVE_20PCT_CAPITAL:
+    description: Encumbrance ≥ 20% of total share capital (SEBI 2019 circular threshold)
+    severity: high
+    weight: 15
+    threshold_pct: 20.0
+    # Both PLEDGE_ABOVE_* fire on first crossing and persist while above; re-score, don't duplicate.
+
+  # ---- RPT spike (Reg 23(9); WOS exempt under Reg 23(5)) ----
+  RPT_SPIKE:
+    description: Half-year RPT/revenue ratio well above its trailing median
+    severity: medium
+    weight: 12
+    multiple_of_median: 2.0          # ratio_current ≥ multiple × median(prior 4 half-years)
+    min_prior_periods: 2             # need at least this many prior ratios to compute median
+    min_ratio_abs: 0.05              # and current ratio ≥ 5% of revenue (avoid noise on tiny bases)
+    exclude_wos: true                # wholly-owned subsidiary counterparties excluded (shown separately)
+    exclude_transaction_types:       # substring match, case-insensitive
+      - remuneration
+      - sitting fee
+      - dividend
+    revenue_basis: consolidated      # fall back to standalone if consolidated missing
+  RPT_WOS_ONLY_NOTE:
+    description: Large RPT volume but entirely with wholly-owned subsidiaries
+    severity: info
+    weight: 0
+
+  # ---- Delayed results (Reg 33(3)) ----
+  RESULTS_DELAYED:
+    description: Financial results filed after the Reg 33(3) deadline
+    severity: high
+    weight: 15
+    quarterly_days: 45
+    annual_days: 60
+    grace_days: 0                    # extra days before flagging (0 = flag on day 46 / 61)
+    # Period-specific SEBI relaxations — add entries when a circular extends a deadline.
+    # Format: {period_end: "YYYY-MM-DD", kind: quarterly|annual, due_date: "YYYY-MM-DD", circular: "..."}
+    relaxations: []
+  CIRP_LABEL:
+    description: Company under CIRP/IBC — shown with its own label, delays not scored
+    severity: info
+    weight: 0
+
+  # ---- Insider cluster (PIT Reg 7(2)) ----
+  INSIDER_CLUSTER:
+    description: 3+ distinct insiders trading same direction in the same calendar month
+    severity: medium
+    weight: 10
+    min_persons: 3
+    modes_included: ["Market Purchase", "Market Sale"]
+    modes_excluded_patterns: ["pledge", "esop", "gift", "inter-se", "inter se", "off market", "off-market", "revoke", "invoke"]
+    direction_sell_weight_bonus: 5   # sell clusters get +5 weight over buy clusters
+    dashboard_note: "Trades under ₹10 lakh per calendar quarter are not disclosed under Reg 7(2); clusters reflect disclosed trades only."
+
+  # ---- SHP changes (Reg 31) ----
+  SHP_FPI_DROP:
+    description: FPI holding fell ≥ X pp QoQ
+    severity: low
+    weight: 6
+    min_drop_pp: 3.0
+  SHP_DII_DROP:
+    description: DII holding fell ≥ X pp QoQ
+    severity: low
+    weight: 6
+    min_drop_pp: 3.0
+  SHP_PROMOTER_DROP:
+    description: Promoter holding fell ≥ X pp QoQ
+    severity: medium
+    weight: 10
+    min_drop_pp: 2.0
+  SHP_NEW_HOLDER_1PCT:
+    description: New named holder crossing 1% (Table III)
+    severity: info
+    weight: 0
+    threshold_pct: 1.0
+  shp_compare_after_day: 22          # run QoQ comparisons only after this day of the month following quarter-end
+
+# Dashboard
+dashboard:
+  top_n: 100
+  min_score_to_show: 1
+  legal_footer: "Indicators derived from public filings; not an allegation, investment advice, or legal opinion."
