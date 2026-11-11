@@ -1,0 +1,8 @@
+Metadata-Version: 2.4
+Name: governance-red-flag-engine
+Version: 0.1.0
+Summary: Governance red-flag screener for Indian listed companies (Raspberry Pi, SQLite, static dashboard)
+Requires-Python: >=3.11
+Requires-Dist: requests>=2.31
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: pypdfium2>=4.30

@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "governance-red-flag-engine"
+version = "0.1.0"
+description = "Governance red-flag screener for Indian listed companies (Raspberry Pi, SQLite, static dashboard)"
+requires-python = ">=3.11"
+dependencies = ["requests>=2.31", "PyYAML>=6.0", "pypdfium2>=4.30"]
+
+[project.scripts]
+grfe = "grfe.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+grfe = ["schema.sql", "templates/*"]
