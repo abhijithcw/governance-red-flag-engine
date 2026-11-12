@@ -32,3 +32,6 @@ Canonical company key everywhere: **ISIN**. Table/column names are stable — ot
 
 ## Score computation
 `score = min(cap, Σ weight × severity_multiplier)` over flags whose `as_of` is within `flag_lookback_days` for that flag code. Config in `config/scoring.yaml`.
+
+## ISIN changes
+`refresh-master` compares each NSE symbol's ISIN with the stored one. On a mismatch it writes `isin_history(old_isin, new_isin)`, clears `nse_symbol` on the old `company_master` row and sets its `status='isin_changed'`. To follow a company across a change, join `isin_history` on `old_isin` → `new_isin`.

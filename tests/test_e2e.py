@@ -140,3 +140,15 @@ def test_end_to_end(conn, tmp_path):
 
 def now():
     return db.now_iso()
+
+
+def test_isin_change_detected(conn):
+    from grfe.sources.company_master import detect_isin_changes, _upsert_partial
+    ctx = Ctx(conn=conn, http=None, src=config.sources())
+    rows = [{"isin": "INE000A01NEW", "name": "Alpha Pledge Ltd", "nse_symbol": "ALPHA", "updated_at": now()}]
+    assert detect_isin_changes(ctx, rows) == 1
+    _upsert_partial(ctx, rows)
+    h = conn.execute("SELECT old_isin,new_isin FROM isin_history").fetchone()
+    assert (h["old_isin"], h["new_isin"]) == ("INE000A01001", "INE000A01NEW")
+    assert ctx.isin_for(symbol="ALPHA") == "INE000A01NEW"
+    assert conn.execute("SELECT status FROM company_master WHERE isin='INE000A01001'").fetchone()[0] == "isin_changed"

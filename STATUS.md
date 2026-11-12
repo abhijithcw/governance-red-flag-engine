@@ -18,4 +18,4 @@
 ## Open decisions
 - HDD mount assumed /mnt/hdd/governance-red-flag-engine/; cron slot; nginx port.
 - Pledge-pct on SHP uses XBRL encumbrance fields; SAST pledge feed is stored but not yet scored separately.
-- BSE-only universe, ISIN-change detection (isin_history) not yet populated.
+- BSE-only universe not yet ingested. ISIN-change detection DONE (company_master.detect_isin_changes).

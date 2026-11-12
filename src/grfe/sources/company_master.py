@@ -40,6 +40,7 @@ def ingest_nse(ctx: Ctx) -> tuple[int, int, int]:
             "source_nse_at": now,
             "updated_at": now,
         })
+    detect_isin_changes(ctx, rows)
     # Don't clobber BSE fields: upsert only NSE columns.
     ins, upd = _upsert_partial(ctx, rows)
     log.info("company_master NSE: %d inserted, %d updated", ins, upd)
@@ -75,6 +76,29 @@ def ingest_bse(ctx: Ctx) -> tuple[int, int, int]:
     ins, upd = _upsert_partial(ctx, rows)
     log.info("company_master BSE: %d inserted, %d updated", ins, upd)
     return ins, upd, 0
+
+
+def detect_isin_changes(ctx: Ctx, rows: list[dict]) -> int:
+    """If an NSE symbol now maps to a different ISIN than we hold, record old->new in isin_history,
+    release the symbol from the old row (status='isin_changed') so symbol lookups hit the new ISIN."""
+    n = 0
+    today = db.now_iso()[:10]
+    with db.tx(ctx.conn):
+        for r in rows:
+            sym = r.get("nse_symbol")
+            if not sym:
+                continue
+            for old in ctx.conn.execute("SELECT isin FROM company_master WHERE nse_symbol=? AND isin<>?", (sym, r["isin"])).fetchall():
+                ctx.conn.execute(
+                    "INSERT INTO isin_history(old_isin,new_isin,effective_date,reason,source_url) VALUES (?,?,?,?,?) "
+                    "ON CONFLICT(old_isin,new_isin) DO NOTHING",
+                    (old["isin"], r["isin"], today, f"NSE symbol {sym} re-mapped to new ISIN (auto-detected)", None))
+                ctx.conn.execute("UPDATE company_master SET nse_symbol=NULL, status='isin_changed', updated_at=? WHERE isin=?",
+                                 (r["updated_at"], old["isin"]))
+                n += 1
+    if n:
+        log.warning("ISIN changes detected: %d (see isin_history)", n)
+    return n
 
 
 def _upsert_partial(ctx: Ctx, rows: list[dict]) -> tuple[int, int]:
