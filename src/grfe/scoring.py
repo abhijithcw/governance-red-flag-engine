@@ -72,8 +72,10 @@ class Flagger:
                 self.add(isin, "PLEDGE_ABOVE_50PCT_HOLDING", latest["period_end"], f"Promoter encumbrance {ph:.1f}% of promoter holding (≥50%)",
                          src, latest["period_end"], ph, c50["threshold_pct"])
             if pc is not None and pc >= c20["threshold_pct"]:
+                cap_ev = [{"label": "Shareholding pattern", "value": f"Pledged {pc:.1f}% of total share capital",
+                           "source_url": latest["source_url"], "as_of": latest["period_end"]}]
                 self.add(isin, "PLEDGE_ABOVE_20PCT_CAPITAL", latest["period_end"], f"Promoter encumbrance {pc:.1f}% of share capital (≥20%)",
-                         src, latest["period_end"], pc, c20["threshold_pct"])
+                         cap_ev, latest["period_end"], pc, c20["threshold_pct"])
             if len(hist) >= 2 and ph is not None and hist[-2]["promoter_pledged_pct_of_holding"] is not None:
                 prev = hist[-2]
                 inc = ph - prev["promoter_pledged_pct_of_holding"]

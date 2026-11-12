@@ -19,20 +19,20 @@ CSS = """
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 a{color:inherit}.wrap{max-width:720px;margin:0 auto;padding:12px 14px 40px}
 header{position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--line);z-index:2}
-header .wrap{display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
-header h1{font-size:17px;margin:0;font-weight:700;letter-spacing:-.01em}
-nav a{display:inline-block;min-height:44px;line-height:44px;padding:0 10px;text-decoration:none;color:var(--mute);font-size:14px}
+header .wrap{display:flex;flex-direction:column;padding:8px 14px 0}
+header h1{font-size:17px;margin:4px 0 0;font-weight:700;letter-spacing:-.01em}
+nav{display:flex;gap:4px;margin:0 -10px}nav a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;text-decoration:none;color:var(--mute);font-size:14px}
 nav a.on{color:var(--ink);font-weight:600}
 .meta{color:var(--mute);font-size:13px;margin:8px 0 14px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:0 0 10px}
 .row{display:flex;gap:10px;align-items:flex-start}.row .main{flex:1;min-width:0}
 .rank{font-variant-numeric:tabular-nums;color:var(--mute);font-size:13px;width:28px;flex:none;padding-top:3px}
-.name{font-weight:650;font-size:16px;text-decoration:none;display:block;overflow-wrap:anywhere}
+.name{font-weight:650;font-size:16px;text-decoration:none;display:flex;align-items:center;min-height:44px;overflow-wrap:anywhere}
 .sym{color:var(--mute);font-size:13px}
 .score{flex:none;min-width:52px;text-align:center;border-radius:10px;padding:6px 8px;font-weight:700;font-variant-numeric:tabular-nums;background:var(--line)}
 .score.hi{background:var(--hi);color:#fff}.score.md{background:var(--md);color:#fff}.score.lo{background:var(--lo);color:#fff}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.chip{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.chip{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);white-space:normal;max-width:100%}
 .chip.high{border-color:var(--hi);color:var(--hi)}.chip.medium{border-color:var(--md);color:var(--md)}.chip.low{border-color:var(--lo);color:var(--lo)}.chip.info{border-color:var(--info);color:var(--info)}
 .tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:6px;background:var(--line);margin-left:6px;vertical-align:middle}
 .flag{border-left:4px solid var(--line);padding-left:10px;margin:12px 0}
@@ -40,15 +40,25 @@ nav a.on{color:var(--ink);font-weight:600}
 .flag h3{margin:0 0 4px;font-size:15px}.flag .sub{color:var(--mute);font-size:13px}
 .ev{margin:6px 0 0;padding:0;list-style:none}.ev li{font-size:14px;padding:6px 0;border-top:1px dashed var(--line)}
 .ev .lbl{color:var(--mute);font-size:12px;display:block}.ev a{word-break:break-all}
-.src{font-size:12px;color:var(--mute)}
+.src{font-size:12px;color:var(--mute)}.ev a,.card .src a{display:inline-flex;align-items:center;min-height:44px;padding:0 4px;word-break:normal;text-decoration:underline}
 table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--mute);font-weight:600;font-size:12px}
 .ok{color:var(--ok)}.bad{color:var(--hi)}
 footer{margin-top:24px;padding-top:12px;border-top:1px solid var(--line);color:var(--mute);font-size:12px}
-.btn{display:inline-block;min-height:44px;line-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:10px;text-decoration:none;font-size:14px}
+.btn{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:10px;text-decoration:none;font-size:14px}
 .empty{color:var(--mute);padding:30px 0;text-align:center}
 h2{font-size:15px;color:var(--mute);font-weight:600;margin:18px 0 8px;text-transform:uppercase;letter-spacing:.04em}
 """
 
+
+
+SHORT = {
+    "AUD_RESIGN_MIDTERM": "Auditor resigned mid-term", "AUD_CHANGE_ENDTERM": "Auditor change (end of term)",
+    "PLEDGE_QOQ_INCREASE": "Pledge up QoQ", "PLEDGE_ABOVE_50PCT_HOLDING": "Pledge ≥50% of holding",
+    "PLEDGE_ABOVE_20PCT_CAPITAL": "Pledge ≥20% of capital", "RPT_SPIKE": "RPT spike",
+    "RPT_WOS_ONLY_NOTE": "RPT: WOS only", "RESULTS_DELAYED": "Results delayed", "CIRP_LABEL": "CIRP / IBC",
+    "INSIDER_CLUSTER": "Insider cluster", "SHP_FPI_DROP": "FPI holding down", "SHP_DII_DROP": "DII holding down",
+    "SHP_PROMOTER_DROP": "Promoter holding down", "SHP_NEW_HOLDER_1PCT": "New >1% holder",
+}
 
 def esc(s) -> str:
     return html.escape(str(s if s is not None else ""), quote=True)
@@ -98,7 +108,7 @@ def build(conn: sqlite3.Connection) -> None:
         cards = []
         for i, s in enumerate(scores, 1):
             fl = flags_by.get(s["isin"], [])
-            chips = "".join(f'<span class="chip {esc(f["severity"])}">{esc(cfg["flags"][f["flag_code"]]["description"] if f["flag_code"] in cfg["flags"] else f["flag_code"])}</span>'
+            chips = "".join(f'<span class="chip {esc(f["severity"])}">{esc(SHORT.get(f["flag_code"], f["flag_code"]))}</span>'
                             for f in _dedupe(fl)[:5])
             label = f'<span class="tag">{esc(s["label"])}</span>' if s["label"] else ""
             cards.append(

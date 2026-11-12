@@ -13,7 +13,7 @@
 3. Real-XBRL tuning: run `grfe load-file` on actual SHP/RPT/results XBRL; adjust config/xbrl_map.yaml patterns.
 4. `grfe backfill` (long; checkpointed/resumable), then `grfe daily`.
 5. Step 5: nginx (deploy/nginx-grfe.conf), cron slot (~19:45 IST, confirm) → scripts/run_daily.sh; 30-day log rotation already in logging setup.
-6. Visual check on Android Chrome @360px; push to GitHub (remote not attached in build session).
+6. Push to GitHub (remote not attached in build session). Visual check @360px DONE (headless Chrome: no horizontal scroll, 44px+ targets).
 
 ## Open decisions
 - HDD mount assumed /mnt/hdd/governance-red-flag-engine/; cron slot; nginx port.
