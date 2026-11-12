@@ -37,7 +37,7 @@ def classify_announcement(r: sqlite3.Row | dict, cfg: dict) -> Iterator[dict]:
         midterm = _any(text, cfg.get("midterm_terms", []))
         if resign:
             # rotation language + resignation usually = end-of-term cessation
-            mid = 0 if rotation else (1 if midterm else 1 if kind == "statutory" else 0)
+            mid = 0 if rotation else 1
             conf = 0.85 if (midterm and not rotation) else (0.6 if not rotation else 0.5)
             yield {**base, "event_type": "auditor_resignation" if mid else "auditor_rotation",
                    "auditor_kind": kind, "mid_term": mid, "reason_text": _reason(r), "confidence": conf,

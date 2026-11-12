@@ -62,14 +62,14 @@ def read(path: Path) -> tuple[dict[str, Context], list[Fact]]:
                     ctx.period_start = (seg.text or "").strip()
             contexts[ctx.id] = ctx
             el.clear()
-        elif tag.startswith(XBRLI) or tag.startswith("{http://www.xbrl.org/2003/linkbase}"):
-            if tag != f"{XBRLI}xbrl":
-                el.clear()
+        elif tag == f"{XBRLI}unit" or tag.startswith("{http://www.xbrl.org/2003/linkbase}"):
+            el.clear()   # other xbrli children (entity/segment/period) are cleared with their parent context
         else:
             cref = el.get("contextRef")
             if cref is not None:
                 facts.append(Fact(_local(tag), cref, (el.text or "").strip(), el.get("unitRef")))
-            el.clear()
+                el.clear()
+            # else: a child of <context>/<unit> (explicitMember, typedMember, ...) — leave it for the parent to read
     return contexts, facts
 
 

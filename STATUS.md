@@ -1,22 +1,21 @@
-# STATUS (updated 2026-11-11)
+# STATUS (updated 2026-11-12)
 
-## Done
-- Step 1: schema.sql, SCHEMA.md, docs/DATA_SOURCES.md, config/scoring.yaml (approved, defaults kept).
-- Step 2 (partial, committed): config.py, db.py (WAL/upsert/runs/checkpoints), http.py (throttle, backoff,
-  disk cache, NSE cookie), xbrl.py (streaming reader + regex matcher), util.py, classify.py (auditor/CIRP/results),
-  config/sources.yaml, config/xbrl_map.yaml, sources/{__init__,company_master,announcements,shp,rpt,pledge,insider}.py.
+## Done (all committed)
+- Step 1: schema.sql, SCHEMA.md, docs/DATA_SOURCES.md, config/scoring.yaml (defaults approved).
+- Step 2: ingestion — http.py (throttle/backoff/cache/NSE cookie), db.py, xbrl.py, classify.py, sources/{company_master,announcements,shp,rpt,pledge,insider,results}.py, cli.py, pyproject, scripts/run_daily.sh, deploy/nginx-grfe.conf.
+- Step 3: scoring.py — all 14 flags; scores + v_latest_scores.
+- Step 4: site.py — static mobile-first dashboard (ranked, per-company w/ source links + as-of, runs, about, legal footer).
+- tests/test_e2e.py: synthetic XBRL + fixtures → every flag fires, secretarial auditor ignored, site renders. PASSING.
 
-## Next (resume here — do NOT redo the above)
-1. sources/results.py (Reg 33 filing dates + revenue from results XBRL; due_date via scoring.yaml relaxations).
-2. cli.py: init-db, refresh-master, ingest --since, backfill, score, site, daily. pyproject.toml / requirements.txt
-   (requests, pyyaml, pypdfium2). scripts/run_daily.sh with flock.
-3. Step 3 scoring.py — flags per scoring.yaml → flags + scores tables.
-4. Step 4 site.py — static mobile-first HTML to SITE_DIR (index ranked, per-company page, run status, legal footer).
-5. tests/ with synthetic fixtures (synthetic SHP/RPT XBRL + fake announcements) → run end-to-end, open HTML.
-6. Commit after each step. Step 5 (cron) held until Pi is up.
+## Next
+1. On the Pi: confirm HDD path (lsblk/df -h), set GRFE_DATA_DIR if different; python -m venv .venv && pip install -e .
+2. `grfe init-db && grfe refresh-master`, then a SMALL live trial (`grfe ingest --days 3 -v`). Live NSE/BSE JSON field names are unverified — probe() will log "SOURCE SHAPE CHANGED"; fix keys in config/sources.yaml and source modules.
+3. Real-XBRL tuning: run `grfe load-file` on actual SHP/RPT/results XBRL; adjust config/xbrl_map.yaml patterns.
+4. `grfe backfill` (long; checkpointed/resumable), then `grfe daily`.
+5. Step 5: nginx (deploy/nginx-grfe.conf), cron slot (~19:45 IST, confirm) → scripts/run_daily.sh; 30-day log rotation already in logging setup.
+6. Visual check on Android Chrome @360px; push to GitHub (remote not attached in build session).
 
 ## Open decisions
-- HDD mount assumed /mnt/hdd/governance-red-flag-engine/ (override via GRFE_DATA_DIR env) — confirm on Pi.
-- Cron slot ~19:45 IST — confirm.
-- GitHub remote not attached (session permission denied) — push manually or re-authorise.
-- Live NSE/BSE endpoint shapes unverified (no network from build workspace) — first run on Pi will probe() and log.
+- HDD mount assumed /mnt/hdd/governance-red-flag-engine/; cron slot; nginx port.
+- Pledge-pct on SHP uses XBRL encumbrance fields; SAST pledge feed is stored but not yet scored separately.
+- BSE-only universe, ISIN-change detection (isin_history) not yet populated.

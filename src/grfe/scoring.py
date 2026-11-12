@@ -111,7 +111,7 @@ class Flagger:
             hr = hy_revenue(isin, pe)
             if hr and hr > 0:
                 by_isin[isin].append((pe, v / hr))
-        filings = {(r["isin"], r["period_end"]): r for r in self.conn.execute("SELECT * FROM rpt_filings")}
+        filings = {(r["isin"], r["period_end"]): dict(r) for r in self.conn.execute("SELECT * FROM rpt_filings")}
         for isin, series in by_isin.items():
             series.sort()
             pe, ratio = series[-1]

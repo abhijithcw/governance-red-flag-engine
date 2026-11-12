@@ -34,7 +34,7 @@ rpt:
   concept_patterns:
     sr_no:           ["^SrNo", "^SerialNumber", "^SlNo"]
     counterparty:    ["^NameOfTheRelatedParty", "^NameOfRelatedParty", "^RelatedPartyName", "^NameOfTheCounterparty"]
-    counterparty_pan:["^PANOfTheRelatedParty", "^PANOfRelatedParty", "RelatedPartyPAN"]
+    counterparty_pan: ["^PANOfTheRelatedParty", "^PANOfRelatedParty", "RelatedPartyPAN"]
     relationship:    ["^RelationshipOfTheRelatedParty", "^RelationshipOfRelatedParty", "^NatureOfRelationship", "^Relationship"]
     txn_type:        ["^TypeOfRelatedPartyTransaction", "^TypeOfTransaction", "^NatureOfTransaction", "^DetailsOfTheTransaction"]
     approved_value:  ["^ValueOfTheRelatedPartyTransactionAsApproved", "^ValueOfRelatedPartyTransactionAsApproved", "^ApprovedValue", "AsApprovedByTheAuditCommittee"]
